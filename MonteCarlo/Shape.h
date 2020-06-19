@@ -1,5 +1,5 @@
 #pragma once
-/*3ç»´doubleç±»å‹å‘é‡*/
+/*3Î¬doubleÀàĞÍÏòÁ¿*/
 class Vector3d
 {
 public:
@@ -7,32 +7,32 @@ public:
     Vector3d(double x, double y, double z);
 };
 
-/*Shapeæ¥å£*/
+/*Shape½Ó¿Ú*/
 class Shape
 {
 public:
     virtual ~Shape() {}; 
-    // è·å–æŸä¸ªä½ç½®çš„çƒ­æ‰©æ•£ç‡   
+    // »ñÈ¡Ä³¸öÎ»ÖÃµÄÈÈÀ©É¢ÂÊ   
     virtual double getAlpha(int x, int y, int z) = 0;
-    // è·å–æŸä¸ªä½ç½®çš„æ¸©åº¦
+    // »ñÈ¡Ä³¸öÎ»ÖÃµÄÎÂ¶È
     virtual double getTemp(int x, int y, int z) = 0;
-    // è®¾ç½®æŸä¸ªä½ç½®çš„æ¸©åº¦
+    // ÉèÖÃÄ³¸öÎ»ÖÃµÄÎÂ¶È
     virtual double setTemp(int x, int y, int z, double T) = 0;
-    // è·å–æŸä¸ªç»´åº¦çš„æ­¥é•¿
+    // »ñÈ¡Ä³¸öÎ¬¶ÈµÄ²½³¤
     virtual double getStep(int dim) = 0;
-    // è·å–å½¢çŠ¶çš„BoundingBoxçš„ä¸‰ç»´å¤§å°
+    // »ñÈ¡ĞÎ×´µÄBoundingBoxµÄÈıÎ¬´óĞ¡
     virtual Vector3d getBoundingBox() = 0;
-    // è·å–å½¢çŠ¶çš„ç½‘æ ¼çš„ä¸‰ç»´å¤§å°
+    // »ñÈ¡ĞÎ×´µÄÍø¸ñµÄÈıÎ¬´óĞ¡
     virtual Vector3d getSize() = 0;
 };
 
-/*å‡åŒ€ç«‹æ–¹ä½“*/
+/*¾ùÔÈÁ¢·½Ìå*/
 class UniformCube : public Shape
 {
 protected:
-    double alpha_factor = 0.432; //çƒ­æ‰©æ•£ç‡
-    double step = 0.1; //å„ä¸ªç»´åº¦ä½¿ç”¨ç»Ÿä¸€æ­¥é•¿
-    int size_with_step[3] = {10,10,20}; //å„ä¸ªç»´åº¦ä¸Šçš„é•¿åº¦ = size_with_step*step
+    double alpha_factor = 0.432; //ÈÈÀ©É¢ÂÊ
+    double step = 1; //¸÷¸öÎ¬¶ÈÊ¹ÓÃÍ³Ò»²½³¤
+	int size_with_step[3]; //¸÷¸öÎ¬¶ÈÉÏµÄ³¤¶È = size_with_step*step
     double ***temp;
 public:
     UniformCube();
@@ -44,8 +44,3 @@ public:
     virtual Vector3d getBoundingBox() override;
     virtual Vector3d getSize() override;
 };
-
-
-
-
-

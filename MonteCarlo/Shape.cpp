@@ -7,6 +7,10 @@ Vector3d::Vector3d(double x, double y, double z)
 
 UniformCube::UniformCube()
 {
+	size_with_step[0] = 10;
+	size_with_step[1] = 10;
+	size_with_step[2] = 20;
+	
     for(int i=0; i<size_with_step[0]; ++i){
         this->temp[i] = new double*[size_with_step[1]];
     }
@@ -87,5 +91,4 @@ Vector3d UniformCube::getSize()
         this->size_with_step[2]
     );
 }
-
 

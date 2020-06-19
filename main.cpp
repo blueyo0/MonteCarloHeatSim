@@ -1,15 +1,33 @@
-#include <iostream>
-#include <math.h>
-#include "Shape.h"
-#include "MonteCarlo.h"
+/*!
+* \file 		main.cpp
+* \brief
+*
+*本程序中包含了简单的VTK显示和Monte Carlo代码
+*
+*\author 		Wang Tao(wangtao@accu-med.cn)
+*\version 		V1.0
+*\date 			2020/06/11
+*/
 
-typedef UniformCube Ucube;
+#include "MainWindow.h"
+#include <QApplication>
+#include <QTranslator>
 
-int main()
+#include "vtkAutoInit.h"
+VTK_MODULE_INIT(vtkRenderingOpenGL2)
+VTK_MODULE_INIT(vtkRenderingFreeType)
+VTK_MODULE_INIT(vtkRenderingVolumeOpenGL2)
+VTK_MODULE_INIT(vtkInteractionStyle)
+
+int main(int argc, char *argv[])
 {
-    Shape* s = new Ucube(Vector3d(1.1,1.2,1.3));
-    MonteCarlo* algo = new MonteCarlo(s); 
-    algo->setProbe(0, 0, 0, 60);
-    algo->run(3);
-}
+	QApplication a(argc, argv);
 
+	QTranslator qTranslator;
+	qTranslator.load(":/language/language_zh.qm");
+	a.installTranslator(&qTranslator);
+
+	MainWindow w;
+	w.show();
+	return a.exec();
+}

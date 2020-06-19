@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWinUI</class>
+ <widget class="QMainWindow" name="MainWinUI">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1138</width>
+    <height>872</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout" columnstretch="2">
+    <item row="0" column="0" rowspan="2">
+     <widget class="QVTKWidget" name="qvtkWidget_3D"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1138</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuTherapy">
+    <property name="title">
+     <string>Therapy</string>
+    </property>
+    <addaction name="actionTherapyControl"/>
+   </widget>
+   <addaction name="menuTherapy"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionTherapyControl"/>
+  </widget>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
+  <action name="actionCamFly">
+   <property name="text">
+    <string>CamFly</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionResetSlice">
+   <property name="text">
+    <string>ResetSlice</string>
+   </property>
+  </action>
+  <action name="actionPan">
+   <property name="text">
+    <string>Pan</string>
+   </property>
+  </action>
+  <action name="actionDolly">
+   <property name="text">
+    <string>Dolly</string>
+   </property>
+  </action>
+  <action name="actionSpin">
+   <property name="text">
+    <string>Spin</string>
+   </property>
+  </action>
+  <action name="actionSlicePan">
+   <property name="text">
+    <string>SlicePan</string>
+   </property>
+  </action>
+  <action name="actionSliceRotate">
+   <property name="text">
+    <string>SliceRotate</string>
+   </property>
+  </action>
+  <action name="actionMark">
+   <property name="text">
+    <string>Mark</string>
+   </property>
+  </action>
+  <action name="actionWindowLevel">
+   <property name="text">
+    <string>WindowLevel</string>
+   </property>
+  </action>
+  <action name="actionDistance">
+   <property name="text">
+    <string>Distance</string>
+   </property>
+  </action>
+  <action name="actionResetCamera">
+   <property name="text">
+    <string>ResetCamera</string>
+   </property>
+  </action>
+  <action name="actionImportVolumeParams">
+   <property name="text">
+    <string>Import Volume Params</string>
+   </property>
+  </action>
+  <action name="actionImportProfile">
+   <property name="text">
+    <string>ImportProfile</string>
+   </property>
+  </action>
+  <action name="actionTherapyControl">
+   <property name="text">
+    <string>Therapy Control</string>
+   </property>
+  </action>
+  <action name="actionVOI">
+   <property name="text">
+    <string>VOI</string>
+   </property>
+  </action>
+  <action name="actionForeground">
+   <property name="text">
+    <string>Foreground</string>
+   </property>
+  </action>
+  <action name="actionBackground">
+   <property name="text">
+    <string>Background</string>
+   </property>
+  </action>
+  <action name="actionCursor">
+   <property name="text">
+    <string>Cursor</string>
+   </property>
+  </action>
+  <action name="actionSegmentation">
+   <property name="text">
+    <string>Segmentation</string>
+   </property>
+  </action>
+  <action name="actionClean">
+   <property name="text">
+    <string>Clean</string>
+   </property>
+  </action>
+  <action name="actionMesh">
+   <property name="text">
+    <string>Mesh</string>
+   </property>
+  </action>
+  <action name="actionVolume">
+   <property name="text">
+    <string>Volume</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QVTKWidget</class>
+   <extends>QWidget</extends>
+   <header>QVTKWidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
