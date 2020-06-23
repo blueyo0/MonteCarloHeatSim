@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <math.h>
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
 
 MonteCarlo::MonteCarlo(Shape* in_shape) : shape(in_shape) {
 	center[0] = 10;
@@ -158,9 +160,11 @@ double MonteCarlo::computeTempWithRandomWalk(int x, int y, int z, int n)
 	// 开始迭代
 	int N = (n < 1) ? 1 : n;
 	double result = 0.0;
+	std::vector<int> cur_pos = {x, y, z};
+	srand((unsigned)time(NULL));
 	for (int i = 0; i < N; ++i) {
-		// TO-DO: 使用RW计算某个位置的温度
-
+		// TO-DO: 使用RW计算某个位置的温度	
+		double rand_prob = rand() / double(RAND_MAX);
 
 	}
 	result /= N;
