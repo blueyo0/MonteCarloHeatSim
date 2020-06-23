@@ -5,6 +5,20 @@ Vector3d::Vector3d(double x, double y, double z)
     : x(x), y(y), z(z) {}
 
 
+std::vector<int> Vector3d::toVectorInt()
+{
+    std::vector<int> res = {int(x), int(y), int(z)};
+    return res;
+}
+
+std::vector<double> Vector3d::toVectorDouble()
+{
+    std::vector<double> res = {x, y, z};
+    return res;
+}
+
+
+
 UniformCube::UniformCube()
 {
 	size_with_step[0] = 10;

@@ -13,6 +13,8 @@ MonteCarlo::MonteCarlo(Shape* in_shape) : shape(in_shape) {
     double x_step = 1/shape->getStep(0);
     int length = (int)sqrt(bd.x*bd.x+bd.y*bd.y+bd.z*bd.z)*x_step;
     temp_1d.resize(length, shape->getTemp(0,0,0));
+	Vector3d size = shape->getSize();
+	this->temp_3d = GlobalFun::create3DArray(size.x, size.y, size.z, 37.0);
 }
 
 void MonteCarlo::setIteration(int num)
@@ -27,6 +29,7 @@ void MonteCarlo::setProbe(int x, int y, int z, double T)
     center[2] = z;
     shape->setTemp(x,y,z,T);
     temp_1d[0] = T;
+	temp_3d[x][y][z] = T;
 }
 
 void MonteCarlo::reset()
@@ -35,6 +38,10 @@ void MonteCarlo::reset()
 	{
 		temp_1d[i] = default_value;
 	}
+	temp_3d = GlobalFun::create3DArray(shape->getSize().x, 
+									   shape->getSize().y, 
+									   shape->getSize().z, 
+									   default_value);
 }
 
 void MonteCarlo::setDefaultValue(double v)
@@ -122,13 +129,37 @@ void MonteCarlo::runWithOneDim(int verbose)
 	}
 }
 
+
+std::vector<double> MonteCarlo::computeProbs(int x, int y, int z)
+{
+	double W = 0.0005;
+	double beta = 0.5;
+
+	std::vector<double> res;
+	double self_p = 1-W*(1-beta)*this->step;
+	res.push_back(self_p);
+	double neigh_p = this->step/(this->shape->getStep(0)*this->shape->getStep(0));
+	std::vector<std::vector<int>> neigh;
+	GlobalFun::getNeighPos({x,y,z}, neigh, shape->getSize().toVectorInt());
+	for(std::vector<int> n : neigh){
+		res.push_back(neigh_p*this->shape->getAlpha(n[0],n[1],n[2]));
+	}
+	return res;
+}
+
+
 //计算(x,y,z)位置, n次随机游走的结果
 double MonteCarlo::computeTempWithRandomWalk(int x, int y, int z, int n)
 {
+	// 计算各个方向的概率
+	std::vector<double> probs = this->computeProbs(x,y,z);
+	std::vector<double> interval = GlobalFun::getProbsInterval(probs);
+	
+	// 开始迭代
 	int N = (n < 1) ? 1 : n;
 	double result = 0.0;
 	for (int i = 0; i < N; ++i) {
-		// TO-DO: 使用randomWalk计算某个位置的温度
+		// TO-DO: 使用RW计算某个位置的温度
 
 
 	}
@@ -139,11 +170,12 @@ double MonteCarlo::computeTempWithRandomWalk(int x, int y, int z, int n)
 void MonteCarlo::runWithRandomWalk(int verbose)
 {
 	Vector3d size = shape->getSize();
-	this->temp_3d = GlobalFun::create3DArray(size.x, size.y, size.z, 37.0);
 	if (verbose == 2) {
 		std::cout << "====================[start]==========================" << std::endl;
 	}
+	// TO-DO: 检查差分稳定性，然后计算RW的概率：F, 1-W(1-beta)delta_t
 	for (int t = 0; t < time_max; t += step) {
+		this->curr_iterate_time = t+1;
 		if (verbose == 3) {
 			output3d();
 		}

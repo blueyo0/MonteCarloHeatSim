@@ -1,5 +1,6 @@
 #ifndef MONTE_CARLO_H
 #define MONTE_CARLO_H
+
 #include "Shape.h"
 #include <vector>
 
@@ -14,8 +15,9 @@ protected:
 	SimMode mode = SimMode::RANDOM_WALK;
 	//SimMode mode = SimMode::ONE_DIM;
     Shape* shape;
-    int step = 1;// æ—¶é—´æ­¥é•¿
+    int step = 1;// Ê±¼ä²½³¤
     int time_max = 2000;
+	int curr_iterate_time = 0;
 	double default_value = 37.0;
 	int monteCarloNum = 100;
     int center[3];
@@ -29,13 +31,14 @@ public:
     void setProbe(int x, int y, int z, double T);
 	void reset();
 	void setDefaultValue(double v);
-    double iterate(); // è¿­ä»£ä¸€æ¬¡ï¼Œè®¡ç®—ä¸€ä¸ªstepäº§ç”Ÿçš„çƒ­ä¼ å¯¼ï¼Œè¿”å›æ¸©åº¦æ›´æ–°å€¼
-    void run(int verbose=0); // ä¸åœæ­¢åœ°ç›´æ¥è¿­ä»£ç®—æ³•ï¼Œç›´è‡³åˆ°è¾¾ç¨³æ€æˆ–åˆ°è¾¾æœ€å¤§è¿­ä»£æ¬¡æ•°
+    double iterate(); // µü´úÒ»´Î£¬¼ÆËãÒ»¸östep²úÉúµÄÈÈ´«µ¼£¬·µ»ØÎÂ¶È¸üĞÂÖµ
+    void run(int verbose=0); // ²»Í£Ö¹µØÖ±½Óµü´úËã·¨£¬Ö±ÖÁµ½´ïÎÈÌ¬»òµ½´ï×î´óµü´ú´ÎÊı
 
 	void runWithOneDim(int verbose = 0);
 	void runWithRandomWalk(int verbose = 0);
 
-	double computeTempWithRandomWalk(int x, int y, int z, int n);//RandomWalkæ¨¡å¼çš„å•ä¸ªä½ç½®è®¡ç®—
+	double computeTempWithRandomWalk(int x, int y, int z, int n);//RandomWalkÄ£Ê½µÄµ¥¸öÎ»ÖÃ¼ÆËã
+	std::vector<double> computeProbs(int x, int y, int z);
 
     void output1d();
     void output3d();

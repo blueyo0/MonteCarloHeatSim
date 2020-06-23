@@ -1,10 +1,14 @@
 #pragma once
+#include <vector>
+
 /*3维double类型向量*/
 class Vector3d
 {
 public:
     double x,y,z;
     Vector3d(double x, double y, double z);
+    std::vector<int> toVectorInt();
+    std::vector<double> toVectorDouble();
 };
 
 /*Shape接口*/
