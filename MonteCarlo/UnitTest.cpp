@@ -2,6 +2,7 @@
 #include "Shape.h"
 #include <iostream>
 #include <vector>
+#include <iomanip>
 
 inline void test_getProbsInterval()
 {
@@ -31,10 +32,32 @@ inline void test_getNeighPos()
     }
 }
 
+inline void test_isPointBoundary()
+{
+    std::vector<int> pos = {2,2,1};
+    std::cout << GlobalFun::isPointBoundary(pos, {50,26,50}) << std::endl;
+    pos = {0,1,1};
+    std::cout << GlobalFun::isPointBoundary(pos, {50,26,50}) << std::endl;
+    pos = {1,0,1};
+    std::cout << GlobalFun::isPointBoundary(pos, {50,26,50}) << std::endl;
+    pos = {2,2,0};
+    std::cout << GlobalFun::isPointBoundary(pos, {50,26,50}) << std::endl;
+    pos = {48,24,48};
+    std::cout << GlobalFun::isPointBoundary(pos, {50,26,50}) << std::endl;
+    pos = {2,25,0};
+    std::cout << GlobalFun::isPointBoundary(pos, {50,26,50}) << std::endl;
+}
+
 
 int main()
 {
-    test_getNeighPos();
+    // test_getNeighPos();
+    // test_isPointBoundary();
+    int time_cost = 3735;
+    std::cout << "Elapsed time: " << std::setfill('0')
+                << std::setw(2) << time_cost/3600 << ":"
+                << std::setw(2) << (time_cost%3600)/60 << ":"
+                << std::setw(2) << time_cost%60 << " s" << std::endl;
 }
 
 

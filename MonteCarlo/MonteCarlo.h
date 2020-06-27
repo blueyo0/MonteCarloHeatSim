@@ -12,8 +12,8 @@ enum SimMode {
 class MonteCarlo
 {
 protected:
+	// SimMode mode = SimMode::ONE_DIM;
 	SimMode mode = SimMode::RANDOM_WALK;
-	//SimMode mode = SimMode::ONE_DIM;
     Shape* shape;
     int step = 1;// 时间步长
     int time_max = 2000;
@@ -21,9 +21,11 @@ protected:
 	double default_value = 37.0;
 	int monteCarloNum = 100;
     int center[3];
+	double center_value = 37.0;
 
     std::vector<double> temp_1d;
 	double ***temp_3d;
+	double ***inital_temp_3d;
 
 public:
     MonteCarlo(Shape*);

@@ -6,6 +6,7 @@
 #include "MonteCarlo/Shape.h"
 #include "MonteCarlo/MonteCarlo.h"
 
+
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -36,11 +37,12 @@ MainWindow::MainWindow(QWidget *parent)
 	// 构建模拟热场计算对象
 	VolumeShape = new UniformCube(Vector3d(50, 26, 50), 1);
 	MCAlgro = new MonteCarlo(VolumeShape);
-	MCAlgro->setProbe(25, 25, 25, sourceTemp);
+	MCAlgro->setProbe(25, 25, 49, sourceTemp);
 	MCAlgro->setDefaultValue(constTemp);
 	MCAlgro->reset();
-	MCAlgro->setIteration(10);						// 设置迭代计算的次数
+	MCAlgro->setIteration(5);						// 设置迭代计算的次数
 	MCAlgro->run();
+
 	this->UpdateDataFromMC();
 
 	// 配置VTK数据显示的pipeline

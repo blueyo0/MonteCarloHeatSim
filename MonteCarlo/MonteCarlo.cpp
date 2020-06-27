@@ -2,10 +2,16 @@
 #include "GlobalFun.h"
 
 #include <iomanip>
-#include <math.h>
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <ctime>
+
+#include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
+
 
 MonteCarlo::MonteCarlo(Shape* in_shape) : shape(in_shape) {
 	center[0] = 10;
@@ -17,6 +23,7 @@ MonteCarlo::MonteCarlo(Shape* in_shape) : shape(in_shape) {
     temp_1d.resize(length, shape->getTemp(0,0,0));
 	Vector3d size = shape->getSize();
 	this->temp_3d = GlobalFun::create3DArray(size.x, size.y, size.z, 37.0);
+	this->inital_temp_3d = GlobalFun::create3DArray(size.x, size.y, size.z, 37.0);
 }
 
 void MonteCarlo::setIteration(int num)
@@ -29,9 +36,11 @@ void MonteCarlo::setProbe(int x, int y, int z, double T)
     center[0] = x;
     center[1] = y;
     center[2] = z;
+	center_value = T;
     shape->setTemp(x,y,z,T);
     temp_1d[0] = T;
 	temp_3d[x][y][z] = T;
+	inital_temp_3d[x][y][z] = T;
 }
 
 void MonteCarlo::reset()
@@ -75,16 +84,36 @@ double MonteCarlo::iterate()
 	else if (this->mode == SimMode::RANDOM_WALK) {
 		/*随机游走算法的MonteCarlo三维模拟*/
 		Vector3d size = shape->getSize();
-		// TO-DO: 边界点温度变化计算
-		for (int ix = 1; ix < size.x - 1; ++ix) {
-			for (int iy = 1; iy < size.y - 1; ++iy) {
-				for (int iz = 1; iz < size.z - 1; ++iz) {
+		// TO-DO: 边界点温度变化计算，后续可加入对流换热边界条件
+		double length = size.x*size.y*size.z;
+		int count = 0;
+		double curr_precent = 0.0;
+		double ***next_temp_3d = GlobalFun::create3DArray(size.x, size.y, size.z, 0.0);
+		for (int ix = 0; ix < size.x; ++ix) {
+			for (int iy = 0; iy < size.y; ++iy) {
+				for (int iz = 0; iz < size.z; ++iz) {
 					// 对所有的内部点，进行随机游走计算
 					double next_T = computeTempWithRandomWalk(ix, iy, iz, this->monteCarloNum);
-					this->temp_3d[ix][iy][iz] = next_T;
+					next_temp_3d[ix][iy][iz] = next_T;
+
+					count++;
+					if (count / length - curr_precent > 0.01) {
+						curr_precent = count / length;
+						std::cout.setf(std::ios::fixed);
+						std::cout << "\r" << count << '/' << int(length) << "\t\t"
+								  << std::setprecision(0) <<  curr_precent*100 << "%";
+						std::cout.unsetf(std::ios::fixed);
+					}
 				}
 			}
 		}
+		this->temp_3d = next_temp_3d;
+		this->temp_3d[center[0]][center[1]][center[2]] = center_value;
+		std::cout.setf(std::ios::fixed);
+		std::cout << "\r" << count << '/' << int(length) << "\t\t"
+				  << std::setprecision(0) << 100 << "%";
+		std::cout.unsetf(std::ios::fixed);
+		std::cout << std::endl;
 	}
 	
     return error;
@@ -156,18 +185,38 @@ double MonteCarlo::computeTempWithRandomWalk(int x, int y, int z, int n)
 	// 计算各个方向的概率
 	std::vector<double> probs = this->computeProbs(x,y,z);
 	std::vector<double> interval = GlobalFun::getProbsInterval(probs);
-	
+	std::vector<std::vector<int>> neighs;
+	GlobalFun::getNeighPos({x,y,z}, neighs, this->shape->getSize().toVectorInt());
+
 	// 开始迭代
 	int N = (n < 1) ? 1 : n;
 	double result = 0.0;
 	std::vector<int> cur_pos = {x, y, z};
 	srand((unsigned)time(NULL));
 	for (int i = 0; i < N; ++i) {
-		// TO-DO: 使用RW计算某个位置的温度	
-		double rand_prob = rand() / double(RAND_MAX);
-
+		for (int s=0; s<this->curr_iterate_time; ++s) {	
+			double rand_prob = rand() / double(RAND_MAX);
+			for(int neigh_idx=0; neigh_idx<neighs.size(); ++neigh_idx){
+				if(rand_prob>=interval[neigh_idx] && rand_prob<=interval[neigh_idx+1]){
+					cur_pos = neighs[neigh_idx];
+				}
+			}
+		}
+		result += this->temp_3d[cur_pos[0]][cur_pos[1]][cur_pos[2]];
+		// if(GlobalFun::isPointBoundary(cur_pos)) {
+		// 	result += this->temp_3d[cur_pos[0]][cur_pos[1]][cur_pos[2]];
+		// }
+		// else {
+		// 	result += this->inital_temp_3d[cur_pos[0]][cur_pos[1]][cur_pos[2]];
+		// }
+		
 	}
 	result /= N;
+
+	/*if (result > 37.0) {
+		std::cout << result << std::endl;
+	}*/
+
 	return result;
 }
 
@@ -177,13 +226,30 @@ void MonteCarlo::runWithRandomWalk(int verbose)
 	if (verbose == 2) {
 		std::cout << "====================[start]==========================" << std::endl;
 	}
-	// TO-DO: 检查差分稳定性，然后计算RW的概率：F, 1-W(1-beta)delta_t
+	assert(1 - 0.00025*this->step > 0); // 检查差分稳定性
+	clock_t start = clock();
 	for (int t = 0; t < time_max; t += step) {
 		this->curr_iterate_time = t+1;
 		if (verbose == 3) {
 			output3d();
 		}
 		iterate();
+		// 计时
+		clock_t end = clock();
+		int elapsed_time = round((end - start) / CLOCKS_PER_SEC) ;
+		int left_time = elapsed_time/curr_iterate_time*(time_max-curr_iterate_time);
+
+		std::cout << "Iterate " << curr_iterate_time << "/" << time_max << "\t"
+				  << "Elapsed Time: " << std::setfill('0')
+				  << std::setw(2) << elapsed_time/3600 << ":"
+				  << std::setw(2) << (elapsed_time%3600)/60 << ":"
+				  << std::setw(2) << elapsed_time%60 << "\t"
+				  << "Estimated Left Time: " 
+				  << std::setw(2) << left_time/3600 << ":"
+				  << std::setw(2) << (left_time%3600)/60 << ":"
+				  << std::setw(2) << left_time%60;
+		std::cout << std::endl;
+		
 		for (int i = 0; i < size.x; ++i) {
 			for (int j = 0; j < size.y; ++j) {
 				for (int k = 0; k < size.z; ++k) {
@@ -211,6 +277,23 @@ void MonteCarlo::run(int verbose)
 	default:
 		break;
 	}
+
+	// TO-DO: 保存结果以进行评估
+	std::string filename = "temp_distribute_"+std::to_string(this->time_max)\
+										 +"_"+std::to_string(this->mode)+".csv";
+	std::ofstream outfile(filename, std::ios::out);
+	Vector3d size = shape->getSize();
+    for(int i=0; i<size.x; ++i){
+        for(int j=0; j<size.y; ++j){
+            for(int k=0; k<size.z; ++k){
+                outfile << shape->getTemp(i,j,k) << " ";
+            }
+            outfile << std::endl;
+        }  
+        outfile << std::endl;  
+    }    
+    outfile << std::endl << std::endl;
+	outfile.close();
 } 
 
 void MonteCarlo::output1d()

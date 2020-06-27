@@ -28,6 +28,11 @@ namespace GlobalFun{
         }
 		return array;
     }
+	
+	/*删除3维数组，防止内存泄露*/
+	static void delete3DArray(double*** array){
+		// TO-DO
+	}
 
 	/* 将概率数组划分到[0,1]区间，并给出边界点
 	 * 例如：对于[1,1,2]，应当输出[0.00, 0.25, 0.50, 1.00]
@@ -44,6 +49,20 @@ namespace GlobalFun{
 		}
 		interval.push_back(prob_sum);
 		return interval;
+	}
+	/**
+	 * 获取一个pos的neighbors的坐标
+	*/
+	bool isPointBoundary(std::vector<int> pos, std::vector<int> boundary={INT_MAX, INT_MAX, INT_MAX}){
+		int dim = pos.size();
+		if(boundary.size()<dim) boundary.resize(dim, INT_MAX);
+		bool flag  = false;
+		for(int j=0; j<dim; ++j){
+			if(pos[j] == 0 || pos[j] == boundary[j]-1){
+				flag = true;
+			}
+		}
+		return flag;
 	}
 
 	/* 检查点是否有效 */
