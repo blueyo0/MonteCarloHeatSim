@@ -13,6 +13,11 @@
 #include <assert.h>
 
 
+#include <amp.h>
+#include <amp_math.h>
+using namespace concurrency;
+
+
 MonteCarlo::MonteCarlo(Shape* in_shape) : shape(in_shape) {
 	center[0] = 10;
 	center[1] = 10;
@@ -60,8 +65,135 @@ void MonteCarlo::setDefaultValue(double v)
 	default_value = v;
 }
 
+double MonteCarlo::iterate_gpu()
+{
+	double error = 0.0;
+
+	if (this->mode == SimMode::RANDOM_WALK) {
+		/*随机游走算法的MonteCarlo三维模拟*/
+		Vector3d size = shape->getSize();
+		// TO-DO: 边界点温度变化计算，后续可加入对流换热边界条件
+		int length = size.x*size.y*size.z;
+		int count = 0;
+		float *in_temp_1d = new float[length];
+		float *in_alpha_1d = new float[length];
+		float *out_temp_1d = new float[length];
+
+		this->temp_3d[center[0]][center[1]][center[2]] = center_value;
+		
+		for (int ix = 0; ix < size.x; ix++)
+		for (int iy = 0; iy < size.y; iy++)
+		for (int iz = 0; iz < size.z; iz++){
+			in_temp_1d[count] = this->temp_3d[ix][iy][iz];
+			in_alpha_1d[count] = this->shape->getAlpha(ix, iy, iz);
+			out_temp_1d[count] = default_value;
+			count++;
+		}
+
+		// 预先构造随机数 [在parallel_for_each中无法使用rand函数]
+		int ramdom_size = 2000;
+		float *in_random_1d = new float[ramdom_size];
+		std::srand((unsigned)std::time(NULL));
+		for (int i = 0; i < ramdom_size; i++){
+			float rand_prob = rand() / double(RAND_MAX);
+			in_random_1d[i] = rand_prob;
+		}
+		
+		//使用C++AMP实现GPU运算
+		array_view<float, 3> gpu_in_temp_3d(size.x, size.y, size.z, in_temp_1d);
+		array_view<float, 1> gpu_in_random_1d(ramdom_size, in_random_1d);
+		array_view<float, 3> gpu_in_alpha_3d(size.x, size.y, size.z, in_temp_1d);
+		array_view<float, 3> gpu_out_temp_3d(size.x, size.y, size.z, out_temp_1d);
+		int shape_extent[6] = { 0, size.x - 1, 0, size.y - 1, 0, size.z - 1 };
+		array_view<int, 1> gpu_shape_extent(6, shape_extent);
+
+
+		
+		parallel_for_each(
+			gpu_out_temp_3d.extent,
+			[=](index<3> idx) restrict(amp)
+		{
+			// 对所有的内部点，进行随机游走计算
+			index<3> n1_idx(idx[0] - 1<gpu_shape_extent[0] ? gpu_shape_extent[0] : idx[0] - 1, idx[1], idx[2]);
+			index<3> n2_idx(idx[0] + 1>gpu_shape_extent[1] ? gpu_shape_extent[1] : idx[0] + 1, idx[1], idx[2]);
+			index<3> n3_idx(idx[0], idx[1] - 1<gpu_shape_extent[2] ? gpu_shape_extent[2] : idx[1] - 1, idx[2]);
+			index<3> n4_idx(idx[0], idx[1] + 1>gpu_shape_extent[3] ? gpu_shape_extent[3] : idx[1] + 1, idx[2]);
+			index<3> n5_idx(idx[0], idx[1], idx[2] - 1<gpu_shape_extent[4] ? gpu_shape_extent[4] : idx[2] - 1);
+			index<3> n6_idx(idx[0], idx[1], idx[2] + 1>gpu_shape_extent[5] ? gpu_shape_extent[5] : idx[2] + 1);
+			
+			
+			float n0 = gpu_in_temp_3d[idx];
+			float n1 = gpu_in_temp_3d[n1_idx];
+			float n2 = gpu_in_temp_3d[n2_idx];
+			float n3 = gpu_in_temp_3d[n3_idx];
+			float n4 = gpu_in_temp_3d[n4_idx];
+			float n5 = gpu_in_temp_3d[n5_idx];
+			float n6 = gpu_in_temp_3d[n6_idx];
+
+			float n_p0 = 1;
+			float n_p1 = gpu_in_alpha_3d[n1_idx];
+			float n_p2 = gpu_in_alpha_3d[n2_idx];
+			float n_p3 = gpu_in_alpha_3d[n3_idx];
+			float n_p4 = gpu_in_alpha_3d[n4_idx];
+			float n_p5 = gpu_in_alpha_3d[n5_idx];
+			float n_p6 = gpu_in_alpha_3d[n6_idx];
+			
+			float n_arr[7] = { n0, n1, n2, n3, n4, n5, n6 };
+			float n_pro[7] = { n_p0, n_p1, n_p2, n_p3, n_p4, n_p5, n_p6 };
+			float sum_n_arr = n_p0 + n_p1 + n_p2 + n_p3 + n_p4 + n_p5 + n_p6;
+
+			// 随机在领域和中心游走N次
+			float random_sum = 0;
+			const int N = 500;
+			for (int i = 0; i < N; i++)
+			{
+				int random_select = ((idx[0] * (i+1)) + (idx[1] * i) + (idx[2]*5+i)) % 2000;
+				index<1> random_idx(random_select);
+				float random_data = gpu_in_random_1d[random_idx];	// 获取一个随机数
+				// float random_data = 0.5;	// 获取一个随机数
+				float cur_pos = 37;
+				float pro_sum = 0;
+				int acc_idx = 0;
+				for (; acc_idx<7; ++acc_idx){
+					pro_sum += n_pro[acc_idx] / sum_n_arr;
+					if (random_data<pro_sum)
+					{
+						break;
+					}
+				}
+				// cur_pos = n_arr[6];
+				cur_pos = n_arr[acc_idx];
+
+				random_sum += cur_pos;
+			}
+		
+			gpu_out_temp_3d[idx] = random_sum / N;
+		}
+		);
+		
+		
+		for (int ix = 0; ix < size.x; ix++)
+		for (int iy = 0; iy < size.y; iy++)
+		for (int iz = 0; iz < size.z; iz++)
+			this->temp_3d[ix][iy][iz] = gpu_out_temp_3d(ix,iy,iz);
+
+		std::cout.setf(std::ios::fixed);
+		std::cout << "\r" << count << '/' << int(length) << "\t\t"
+			<< std::setprecision(0) << 100 << "%";
+		std::cout.unsetf(std::ios::fixed);
+		std::cout << std::endl;
+	}
+	
+	return error;
+}
+
+
+
 double MonteCarlo::iterate()
 {
+	if (useAMP) {
+		return iterate_gpu();
+	}
 	double error = 0.0;
 	if (this->mode == SimMode::ONE_DIM) {
 		/*一维模拟三维*/

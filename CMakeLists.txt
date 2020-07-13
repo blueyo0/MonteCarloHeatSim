@@ -9,6 +9,10 @@ project(MonteCarlo)
 set(CMAKE_INCLUDE_CURRENT_DIR ON) 
 
 ##########################################################################
+#配置CUDA
+# find_package(CUDA REQUIRED)
+
+##########################################################################
 #配置VTK
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})

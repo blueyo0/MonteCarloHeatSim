@@ -14,6 +14,7 @@ class MonteCarlo
 protected:
 	// SimMode mode = SimMode::ONE_DIM;
 	SimMode mode = SimMode::RANDOM_WALK;
+	bool useAMP = true;
     Shape* shape;
     int step = 1;// 时间步长
     int time_max = 2000;
@@ -34,6 +35,7 @@ public:
 	void reset();
 	void setDefaultValue(double v);
     double iterate(); // 迭代一次，计算一个step产生的热传导，返回温度更新值
+	double iterate_gpu();
     void run(int verbose=0); // 不停止地直接迭代算法，直至到达稳态或到达最大迭代次数
 
 	void runWithOneDim(int verbose = 0);
